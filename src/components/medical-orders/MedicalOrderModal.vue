@@ -4,8 +4,10 @@
 
 import { computed, defineComponent, ref } from "vue";
 import type { MedicalOrder } from "../../types/medical-orders";
+import type { Medicine } from "../../types/medicines";
 import { useVuelidate } from '@vuelidate/core'
-import { required, numeric, maxLength } from "@vuelidate/validators";
+import { required, numeric, maxLength, minValue } from "@vuelidate/validators";
+
 
 export default defineComponent({
     name: 'MedicalOrderModal',
@@ -14,6 +16,8 @@ export default defineComponent({
     },
     emits: ['hide', 'save'],
     setup(props, { emit }) { 
+
+        const isLoading = ref(false)
 
         const isModalOpen = computed(() => props.isOpen)
 
@@ -36,8 +40,27 @@ export default defineComponent({
             doctorSignature: { required }
         }))
 
+        const medicine = ref<Medicine>({ 
+            name: '',
+            description: '',
+            qty: 0,
+            provider: '',
+            doctorSignature: ''
+        })
+
+        const rules_medicines = computed(() => ({
+            name: { required },
+            description: { required },
+            qty: { required, minValue: minValue(1) },
+            provider: { required },
+            doctorSignature: { required }
+        }))
+
         //Para que aplique las validaciones sobre los campos determiados se usa la siguiente linea de codigo
         const v$ = useVuelidate(rules, order)
+
+        //Para que aplique las validaciones sobre los campos determiados se usa la siguiente linea de codigo
+        const v2$ = useVuelidate(rules_medicines, medicine);
 
         //Boton para guardar información 
         const handleSubmit = async () => {
@@ -50,11 +73,21 @@ export default defineComponent({
             }
 
             isLoading.value = true
+
+            //Guardar en base de datos
+            order.value.createdAt = new Date().toISOString()
+            emit("save", JSON.stringify(order.value))
+            emit("hide")
+            isLoading.value = false
         }
 
         return {
             emit,
-            isModalOpen
+            isModalOpen,
+            isLoading,
+            handleSubmit,
+            v$,
+            v2$
         }
     }
 })
@@ -72,24 +105,27 @@ export default defineComponent({
               <div class="field">
                 <label class="has-text-grey has-text-weight-light">Nombres del paciente</label>
                 <div class="control">
-                  <input class="input" type="text" />
+                  <input v-model="v$.name.$model" class="input" type="text" />
                 </div>
+                <p v-if="v$.name.$error" class="has-text-danger">Campo obligatorio</p>
               </div>
             </div>
             <div class="column is-3">
               <div class="field">
                 <label class="has-text-grey has-text-weight-light">Apellidos del paciente</label>
                 <div class="control">
-                  <input class="input" type="text" />
+                  <input v-model="v$.LastName.$model" class="input" type="text" />
                 </div>
+                <p v-if="v$.LastName.$error" class="has-text-danger">Campo obligatorio</p>
               </div>
             </div>
             <div class="column is-3">
               <div class="field">
                 <label class="has-text-grey has-text-weight-light">Cedula</label>
                 <div class="control">
-                  <input class="input" type="text" />
+                  <input v-model="v$.idNumber.$model" class="input" type="text" />
                 </div>
+                <p v-if="v$.idNumber.$error" class="has-text-danger">Campo obligatorio</p>
               </div>
             </div>
             <div class="column is-3">
@@ -97,7 +133,7 @@ export default defineComponent({
                 <label class="has-text-grey has-text-weight-light">EPS</label>
                 <div class="control has-icons-left">
                   <div class="select is-fullwidth">
-                    <select>
+                    <select v-model="v$.eps.$model">
                       <option selected>Seleccione una opción</option>
                       <option>SURA</option>
                       <option>PONAL</option>
@@ -108,6 +144,7 @@ export default defineComponent({
                     <i class="fa fa-building"></i>
                   </div>
                 </div>
+                <p v-if="v$.eps.$error" class="has-text-danger">Campo obligatorio</p>
               </div>
             </div>
   
@@ -120,7 +157,7 @@ export default defineComponent({
                 <label class="has-text-grey has-text-weight-light">Medicamento</label>
                 <div class="control has-icons-left">
                   <div class="select is-fullwidth">
-                    <select>
+                    <select v-model="v2$.name.$model">
                       <option selected>Seleccione una opción</option>
                       <option>Medicamento 1</option>
                       <option>Medicamento 2</option>
@@ -131,21 +168,24 @@ export default defineComponent({
                     <i class="fa fa-building"></i>
                   </div>
                 </div>
+                <p v-if="v2$.name.$error" class="has-text-danger">Campo obligatorio</p>
               </div>
             </div>
             <div class="column is-2">
               <div class="field">
                 <label class="has-text-grey has-text-weight-light">Cantidad</label>
                 <div class="control">
-                  <input class="input" type="number" />
+                  <input v-model="v2$.qty.$model" class="input" type="number" />
                 </div>
+                <p v-if="v2$.qty.minValue.$invalid" class="has-text-danger">La cantidad minima es 1</p>
+                <p v-if="v2$.qty.required.$invalid" class="has-text-danger">Campo obligatorio</p>
               </div>
             </div>
             <div class="column is-4">
               <div class="field">
                 <label style="opacity: 0">Empty</label>
                 <div class="control">
-                  <button class="button is-primary is-outlined is-fullwidth">
+                  <button class="button is-primary is-outlined is-fullwidth" :class="{'id-loading': isLoading}" @click="handleSubmit">
                     <span class="icon mr-1"> <i class="fa fa-plus"></i> </span>Agregar
                   </button>
                 </div>

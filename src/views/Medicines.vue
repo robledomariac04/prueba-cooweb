@@ -10,6 +10,14 @@ let isModalOpen = ref(false)
 
 
 <template>
+
+  <div id="navbarBasicExample" class="navbar-menu">
+    <div class="navbar-start">
+      <a class="navbar-item"> <RouterLink to="/ordenes"> Órdenes Médicas </RouterLink></a>
+      <a class="navbar-item"> <RouterLink to="/medicamentos"> Medicamentos </RouterLink> </a>
+    </div>
+  </div>
+
   <div class="columns is-multiline">
     <!-- Welcome message (This will be a component) -->
     <div class="column is-12 mt-5 mb-5">

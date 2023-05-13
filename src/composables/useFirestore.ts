@@ -25,13 +25,25 @@ export const useFirestore = () => {
     }
 
     const addDocument = async (path: string, document: Record<string, any>) => {
-        const reference = await getReference('document', path)
+        const reference = await getReference('collection', path)
         return await reference.add(document)
+    }
+
+    const deleteDocument = async (path: string) => {
+        const reference = await getReference('collection', path)
+        return await reference.delete(document)
+    }
+
+    const updateDocument = async (path: string, document: Record<string, any>) => {
+        const reference = await getReference('collection', path)
+        return await reference.update(document)
     }
 
     return {
         getReference,
         getCollection,
-        addDocument
+        addDocument,
+        deleteDocument,
+        updateDocument
     }
 }
