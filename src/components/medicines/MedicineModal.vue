@@ -1,6 +1,5 @@
 <script lang="ts">
-import { ref } from "vue"
-import { computed, defineComponent } from "vue";
+import { computed, defineComponent, ref } from "vue";
 import { useVuelidate } from '@vuelidate/core'
 import { required, minValue } from "@vuelidate/validators";
 import type { Medicine } from "../../types/medicines";
@@ -15,6 +14,8 @@ export default defineComponent({
 
         const isLoading = ref(false)
 
+        const isModalOpen = computed(() => props.isOpen)
+
         const medicine = ref<Medicine>({ 
             name: '',
             description: '',
@@ -22,8 +23,6 @@ export default defineComponent({
             provider: '',
             doctorSignature: ''
         })
-
-        const isModalOpen = computed(() => props.isOpen)
 
         const rules = computed(() => ({
             name: { required },

@@ -4,6 +4,9 @@ import { computed, ref } from 'vue'
 import Welcome from '@/components/common/Welcome.vue';
 import CustomTable from '@/components/shared/CustomTable.vue';
 import MedicalOrderModal from '@/components/medical-orders/MedicalOrderModal.vue';
+import { useFirestore } from '@/composables/useFirestore';
+import type { BaseColumn } from '@/types/common';
+import type { MedicalOrder } from "@/types/medical-orders";
 
 
 /* //Variables
@@ -12,12 +15,41 @@ const LastName = ref('Robledo')
 //Propiedades comutadas
 const getFullname = computed(() => name.value + ' ' + LastName.value) */
 
+const {getCollection, addDocument} = useFirestore()
+
 let isModalOpen = ref(false)
+
+const columns = ref<BaseColumn[]>([
+  {
+    label: "Nombre",
+    field: "name"
+  },
+  {
+    label: "Comentario",
+    field: "comments"
+  },
+  {
+    label: "Asignado",
+    field: "doctorSignature"
+  }
+])
+
+const rows = ref<MedicalOrder[]>([])
 
 const range = ref({
   start : null,
   end: null
 })
+
+const getRecords = async () => {
+  const response = await getCollection('Medical-Orders')
+  rows.value = response
+}
+
+const handleSubmit = async (document: string) => {
+  const response = await addDocument("Medical-Orders", JSON.parse(document) as MedicalOrder)
+  getRecords()
+}
 
 </script>
 
@@ -63,11 +95,11 @@ const range = ref({
     <!-- Table (This will be a component) -->
     <!-- TODO: add a button to download the pdf -->
     <div class="column is-12">
-      <CustomTable :rows="[]" :cols="[]" />
+      <CustomTable :rows="rows" :cols="columns" />
     </div>
 
     <!-- Modal (This will be a component) -->
-    <MedicalOrderModal :is-open="isModalOpen" @hide="isModalOpen = false"/>
+    <MedicalOrderModal :is-open="isModalOpen" @hide="isModalOpen = false" @save="handleSubmit"/>
   </div>
 </template>
 

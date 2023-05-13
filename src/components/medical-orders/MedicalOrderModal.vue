@@ -1,16 +1,56 @@
 <script lang="ts">
 
 //import { propsDef } from "v-calendar/dist/types/src/use/calendar";
-import { computed, defineComponent } from "vue";
+
+import { computed, defineComponent, ref } from "vue";
+import type { MedicalOrder } from "../../types/medical-orders";
+import { useVuelidate } from '@vuelidate/core'
+import { required, numeric, maxLength } from "@vuelidate/validators";
 
 export default defineComponent({
     name: 'MedicalOrderModal',
     props: { 
         isOpen: { type: Boolean, required: true}
     },
-    emits: ['hide'],
+    emits: ['hide', 'save'],
     setup(props, { emit }) { 
+
         const isModalOpen = computed(() => props.isOpen)
+
+        const order = ref<MedicalOrder>({ 
+            name: '',
+            LastName: '',
+            idNumber: '',
+            eps: '',
+            medicines: [],
+            comments: '',
+            doctorSignature: ''
+        })
+
+        const rules = computed(() => ({
+            name: { required },
+            LastName: { required },
+            idNumber: { required, numeric, maxLenght: maxLength(12) },
+            eps: { required },
+            medicines: [],
+            doctorSignature: { required }
+        }))
+
+        //Para que aplique las validaciones sobre los campos determiados se usa la siguiente linea de codigo
+        const v$ = useVuelidate(rules, order)
+
+        //Boton para guardar información 
+        const handleSubmit = async () => {
+            const isFormValid = await v$.value.$validate()
+
+            console.log(isFormValid)
+
+            if (!isFormValid){
+                return
+            }
+
+            isLoading.value = true
+        }
 
         return {
             emit,
